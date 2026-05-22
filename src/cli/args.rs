@@ -67,6 +67,9 @@ impl Cli {
             Some(super::Commands::Skills { action }) => {
                 self.run_skills(action).await?;
             }
+            Some(super::Commands::Task { goal, persona, bundles, max_steps, criteria, trace }) => {
+                self.run_task(state, goal.clone(), persona.clone(), bundles.clone(), *max_steps, criteria.clone(), *trace).await?;
+            }
             None => {
                 self.run_repl(state, None)?;
             }
@@ -592,6 +595,112 @@ impl Cli {
         Ok(())
     }
 
+    async fn run_task(
+        &self,
+        state: crate::state::AppState,
+        goal_text: String,
+        persona_override: Option<String>,
+        bundles_override: Option<Vec<String>>,
+        max_steps: usize,
+        criteria: Vec<String>,
+        trace: bool,
+    ) -> anyhow::Result<()> {
+        use colored::Colorize;
+        use crate::agent::{AgentRunner, Goal, Persona};
+        use crate::api::ApiClient;
+        use crate::tools::ToolRegistry;
+        use std::sync::Arc;
+
+        let api = ApiClient::new(state.settings.clone());
+        if api.get_api_key().is_none() {
+            eprintln!("Error: API key not configured. Set ANTHROPIC_API_KEY / DASHSCOPE_API_KEY / DEEPSEEK_API_KEY,");
+            eprintln!("       or run: agentrust config set api_key \"...\"");
+            std::process::exit(1);
+        }
+
+        // Resolve persona: --persona > settings.default_persona.
+        let persona_slug = persona_override
+            .unwrap_or_else(|| state.settings.default_persona.clone());
+        let persona = Persona::from_slug(&persona_slug);
+        let profile = persona.profile();
+
+        // Resolve bundles: --bundles > settings.enabled_bundles >
+        // persona-suggested bundles.
+        let bundles: Vec<String> = match bundles_override {
+            Some(v) if !v.is_empty() => v,
+            _ if !state.settings.enabled_bundles.is_empty() => {
+                state.settings.enabled_bundles.clone()
+            }
+            _ => profile.bundles.clone(),
+        };
+
+        // ToolRegistry::new() wires up every built-in tool; we then
+        // restrict it to the chosen bundles so the model sees a focused
+        // surface.
+        let mut registry = ToolRegistry::new();
+        registry.restrict_to_bundles(&bundles);
+        let tools = Arc::new(registry);
+
+        let mut goal = Goal::new(goal_text);
+        for c in criteria {
+            goal = goal.with_criterion(c);
+        }
+
+        println!("{} {}", "🎯".truecolor(255, 140, 66), "Goal:".bold());
+        println!("   {}", goal.objective);
+        println!(
+            "{} persona = {}, bundles = {:?}, max_steps = {}",
+            "▸".truecolor(147, 112, 219),
+            persona.slug().bright_cyan(),
+            bundles,
+            max_steps
+        );
+        println!();
+
+        let mut runner = AgentRunner::new(api, tools, persona).with_max_steps(max_steps);
+        if state.settings.metacog.enabled {
+            runner = runner.with_metacog(state.metacog.clone());
+        }
+        let outcome = runner.run(goal).await?;
+
+        if trace {
+            println!("{}", "── Trace ──".truecolor(100, 80, 120));
+            for step in &outcome.steps {
+                let tag = match step.kind {
+                    crate::agent::StepKind::Assistant => "assistant".truecolor(200, 150, 255),
+                    crate::agent::StepKind::ToolCall => "tool→".bright_yellow(),
+                    crate::agent::StepKind::ToolResult => "←tool".green(),
+                };
+                println!(
+                    "  [{:>2}] {:<10} {} {}",
+                    step.iteration,
+                    tag,
+                    step.label.bright_white(),
+                    truncate_payload(&step.payload, 200).bright_black()
+                );
+            }
+            println!();
+        }
+
+        println!(
+            "{} stop_reason = {:?}",
+            "▸".truecolor(147, 112, 219),
+            outcome.stop_reason
+        );
+        match outcome.final_answer {
+            Some(text) if !text.is_empty() => {
+                println!();
+                println!("{} {}", "✓".green().bold(), "Final answer:".bold());
+                println!("{}", text);
+            }
+            _ => {
+                println!("{} (no final answer produced)", "!".yellow());
+            }
+        }
+
+        Ok(())
+    }
+
     async fn run_skills(&self, action: &super::SkillsCommands) -> anyhow::Result<()> {
         match action {
             super::SkillsCommands::List => {
@@ -611,5 +720,15 @@ impl Cli {
             }
         }
         Ok(())
+    }
+}
+
+/// Truncate a string to `n` chars for readable trace output.
+fn truncate_payload(s: &str, n: usize) -> String {
+    if s.chars().count() <= n {
+        s.replace('\n', " ")
+    } else {
+        let head: String = s.chars().take(n).collect();
+        format!("{}…", head.replace('\n', " "))
     }
 }

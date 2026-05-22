@@ -210,12 +210,14 @@ impl VoiceService {
                 content: Some(prompt.to_string()),
                 tool_calls: None,
                 tool_call_id: None,
+                images: Vec::new(),
             },
             crate::api::ChatMessage {
                 role: "user".to_string(),
                 content: Some(format!("[Audio data: {} bytes]", audio_data.len())),
                 tool_calls: None,
                 tool_call_id: None,
+                images: Vec::new(),
             },
         ];
 

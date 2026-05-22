@@ -12,12 +12,12 @@ pub fn init_project(name: &str) -> anyhow::Result<()> {
     // Create basic structure
     std::fs::create_dir_all(project_dir.join("src"))?;
     
-    // Create CLAUDE.md file
-    let claude_md = format!(
-        "# {}\n\nThis project was initialized with AgentRust.\n\n## Structure\n\n- `src/` - Source code\n- `CLAUDE.md` - Project documentation for Claude\n\n## Getting Started\n\nStart coding with AgentRust!\n",
+    // Create AGENT.md file — project context for any agent run inside this directory.
+    let agent_md = format!(
+        "# {}\n\nThis project was initialized with AgentRust.\n\n## Structure\n\n- `src/` — source code\n- `AGENT.md` — project context for the agent\n\n## Notes\n\nDescribe the project's goals, constraints, and conventions here so the\nagent can pick them up automatically on every run.\n",
         name
     );
-    std::fs::write(project_dir.join("CLAUDE.md"), claude_md)?;
+    std::fs::write(project_dir.join("AGENT.md"), agent_md)?;
     
     // Create .gitignore
     let gitignore = "target/\n*.log\n.env\n";
@@ -26,7 +26,7 @@ pub fn init_project(name: &str) -> anyhow::Result<()> {
     println!("Created project structure:");
     println!("  {}/", name);
     println!("    src/");
-    println!("    CLAUDE.md");
+    println!("    AGENT.md");
     println!("    .gitignore");
     
     Ok(())

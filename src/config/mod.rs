@@ -31,7 +31,19 @@ pub struct Settings {
     /// MERIT metacognition layer settings.
     #[serde(default)]
     pub metacog: MetacogSettings,
+    /// Default persona slug used by `agentrust task` and the REPL when
+    /// no `--persona` flag is given. See `crate::agent::Persona`.
+    #[serde(default = "default_persona")]
+    pub default_persona: String,
+    /// Default capability bundles enabled for the `task` runner. An
+    /// empty list means "use whatever the persona suggests". See
+    /// `crate::tools::bundle`.
+    #[serde(default = "default_bundles")]
+    pub enabled_bundles: Vec<String>,
 }
+
+fn default_persona() -> String { "general".to_string() }
+fn default_bundles() -> Vec<String> { Vec::new() }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemorySettings {
@@ -175,6 +187,8 @@ impl Default for Settings {
                 auto_update: true,
             },
             metacog: MetacogSettings::default(),
+            default_persona: default_persona(),
+            enabled_bundles: default_bundles(),
         }
     }
 }
@@ -240,6 +254,14 @@ impl Settings {
                 };
             }
             "voice.enabled" => settings.voice.enabled = value.parse().unwrap_or(false),
+            "default_persona" | "persona" => settings.default_persona = value.to_string(),
+            "enabled_bundles" | "bundles" => {
+                settings.enabled_bundles = value
+                    .split(',')
+                    .map(|s| s.trim().to_string())
+                    .filter(|s| !s.is_empty())
+                    .collect();
+            }
             _ => return Err(anyhow::anyhow!("Unknown setting: {}", key)),
         }
         

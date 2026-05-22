@@ -164,6 +164,7 @@ impl ContextWindow {
                 content: Some(e.content.clone()),
                 tool_calls: None,
                 tool_call_id: None,
+                images: Vec::new(),
             })
             .collect()
     }

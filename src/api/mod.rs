@@ -147,14 +147,66 @@ pub struct ToolCallFunction {
     pub arguments: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// One inline image attachment for a multimodal chat message.
+///
+/// Maps to the OpenAI / Anthropic vision payload —
+/// `{"type": "image_url", "image_url": {"url": "..."}}` — when a
+/// message containing it is serialised.
+#[derive(Debug, Clone, Deserialize)]
+pub struct ImageRef {
+    /// `http(s)://` URL or `data:image/<kind>;base64,...` URI.
+    pub url: String,
+    /// Optional `low` / `high` detail hint.
+    pub detail: Option<String>,
+}
+
+impl ImageRef {
+    pub fn from_url(url: impl Into<String>) -> Self {
+        Self { url: url.into(), detail: None }
+    }
+
+    pub fn from_data_uri(uri: impl Into<String>) -> Self {
+        Self { url: uri.into(), detail: None }
+    }
+
+    /// Read a local file and wrap it in a `data:` URI. Falls back to
+    /// `image/png` if the extension is unrecognised.
+    pub fn from_file(path: impl AsRef<std::path::Path>) -> std::io::Result<Self> {
+        let p = path.as_ref();
+        let bytes = std::fs::read(p)?;
+        let mime = match p.extension().and_then(|e| e.to_str()).map(|s| s.to_ascii_lowercase()).as_deref() {
+            Some("png") => "image/png",
+            Some("jpg") | Some("jpeg") => "image/jpeg",
+            Some("gif") => "image/gif",
+            Some("webp") => "image/webp",
+            _ => "image/png",
+        };
+        use base64::Engine as _;
+        let b64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
+        Ok(Self {
+            url: format!("data:{};base64,{}", mime, b64),
+            detail: None,
+        })
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct ChatMessage {
     pub role: String,
     pub content: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub tool_calls: Option<Vec<ToolCall>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub tool_call_id: Option<String>,
+    /// Optional inline image attachments. When non-empty, the message
+    /// is serialised in OpenAI multimodal "parts" form
+    /// (`content: [{type:text,...}, {type:image_url,...}]`); otherwise
+    /// it serialises as a plain `content: "..."`.
+    ///
+    /// Deserialised responses never set this — incoming model output
+    /// goes through `content: Option<String>`.
+    #[serde(skip, default)]
+    pub images: Vec<ImageRef>,
 }
 
 impl ChatMessage {
@@ -164,6 +216,18 @@ impl ChatMessage {
             content: Some(content.into()),
             tool_calls: None,
             tool_call_id: None,
+            images: Vec::new(),
+        }
+    }
+
+    /// Multimodal user message — text plus one or more images.
+    pub fn user_with_images(content: impl Into<String>, images: Vec<ImageRef>) -> Self {
+        Self {
+            role: "user".to_string(),
+            content: Some(content.into()),
+            tool_calls: None,
+            tool_call_id: None,
+            images,
         }
     }
 
@@ -173,6 +237,7 @@ impl ChatMessage {
             content: Some(content.into()),
             tool_calls: None,
             tool_call_id: None,
+            images: Vec::new(),
         }
     }
 
@@ -182,6 +247,7 @@ impl ChatMessage {
             content: None,
             tool_calls: Some(tool_calls),
             tool_call_id: None,
+            images: Vec::new(),
         }
     }
 
@@ -191,6 +257,7 @@ impl ChatMessage {
             content: Some(content.into()),
             tool_calls: None,
             tool_call_id: None,
+            images: Vec::new(),
         }
     }
 
@@ -200,7 +267,63 @@ impl ChatMessage {
             content: Some(content.into()),
             tool_calls: None,
             tool_call_id: Some(tool_call_id.into()),
+            images: Vec::new(),
         }
+    }
+
+    /// Attach an image to an existing message in builder style.
+    pub fn with_image(mut self, image: ImageRef) -> Self {
+        self.images.push(image);
+        self
+    }
+}
+
+// Hand-rolled Serialize: emits the OpenAI multimodal "parts" form when
+// `images` is non-empty, otherwise the simple `content: "..."` form. We
+// can't use serde's derive here because the JSON shape depends on a
+// sibling field.
+impl Serialize for ChatMessage {
+    fn serialize<S: serde::Serializer>(&self, ser: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeMap;
+        let mut field_count = 1; // role
+        if !self.images.is_empty() || self.content.is_some() { field_count += 1; }
+        if self.tool_calls.is_some() { field_count += 1; }
+        if self.tool_call_id.is_some() { field_count += 1; }
+
+        let mut map = ser.serialize_map(Some(field_count))?;
+        map.serialize_entry("role", &self.role)?;
+
+        if self.images.is_empty() {
+            if let Some(c) = &self.content {
+                map.serialize_entry("content", c)?;
+            }
+        } else {
+            // Multimodal parts array. We always include the text part
+            // (even if empty) for compatibility — most vision backends
+            // require it.
+            let mut parts: Vec<serde_json::Value> = Vec::with_capacity(self.images.len() + 1);
+            let text = self.content.clone().unwrap_or_default();
+            parts.push(serde_json::json!({"type": "text", "text": text}));
+            for img in &self.images {
+                let mut url_obj = serde_json::json!({"url": img.url});
+                if let Some(d) = &img.detail {
+                    url_obj["detail"] = serde_json::Value::String(d.clone());
+                }
+                parts.push(serde_json::json!({
+                    "type": "image_url",
+                    "image_url": url_obj,
+                }));
+            }
+            map.serialize_entry("content", &parts)?;
+        }
+
+        if let Some(tcs) = &self.tool_calls {
+            map.serialize_entry("tool_calls", tcs)?;
+        }
+        if let Some(id) = &self.tool_call_id {
+            map.serialize_entry("tool_call_id", id)?;
+        }
+        map.end()
     }
 }
 

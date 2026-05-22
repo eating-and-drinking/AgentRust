@@ -98,7 +98,7 @@ impl LocaleLoader {
             locale,
             &[
                 ("app.name", "AgentRust"),
-                ("app.description", "AI-powered coding assistant"),
+                ("app.description", "General-purpose autonomous agent runtime"),
                 ("app.version", "Version {version}"),
                 ("menu.file", "File"),
                 ("menu.edit", "Edit"),

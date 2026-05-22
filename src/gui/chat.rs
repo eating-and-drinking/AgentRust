@@ -96,8 +96,8 @@ impl Default for ChatPanel {
     fn default() -> Self {
         Self {
             messages: vec![
-                ChatMessage::assistant("Hello! I'm Claude, your AI coding companion. I can help you with:")
-                    .with_thinking("The user has started a new conversation. I should greet them warmly and explain my capabilities.")
+                ChatMessage::assistant("Hi — I'm AgentRust, a general-purpose autonomous agent. I can help with research, writing, analysis, coding, and desktop tasks.")
+                    .with_thinking("The user has started a new conversation. I should greet them warmly and explain my capabilities as a general-purpose agent.")
             ],
             input_text: String::new(),
             is_loading: false,
@@ -188,7 +188,7 @@ impl ChatPanel {
             ui.add_space(8.0);
 
             ui.label(
-                RichText::new("Your AI coding companion - powered by Rust 🦀")
+                RichText::new("Your general-purpose agent — powered by Rust 🦀")
                     .size(14.0)
                     .color(theme.muted_text_color())
             );

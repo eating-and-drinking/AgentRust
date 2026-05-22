@@ -36,8 +36,8 @@ pub mod colors {
 pub const LOGO: &str = r#"
    ╭──────────────────────────────────────╮
    │                                      │
-   │   🟣 AgentRust                     │
-   │      High-Performance Rust Edition   │
+   │   🟣 AgentRust                       │
+   │      General-purpose agent runtime   │
    │                                      │
    ╰──────────────────────────────────────╯
 "#;
@@ -58,9 +58,9 @@ fn print_gradient_banner() {
     let banner = r#"
     ╭────────────────────────────────────────────────────────────╮
     │                                                            │
-    │     🟣  AgentRust  ·  High-Performance Rust Edition      │
+    │     🟣  AgentRust  ·  General-purpose agent runtime        │
     │                                                            │
-    │         ⚡ 2.5x faster  ·  📦 97% smaller  ·  🦀 Rust       │
+    │     plan · act · reflect  ·  multi-persona  ·  🦀 Rust     │
     │                                                            │
     ╰────────────────────────────────────────────────────────────╯
     "#;
@@ -79,10 +79,11 @@ fn print_gradient_banner() {
 
 /// Print feature highlights
 fn print_features() {
-    println!("  {}", "Performance:".truecolor(147, 112, 219).bold());
-    println!("    {} 启动速度提升 {} ", "▸".green(), "2.5x".green().bold());
-    println!("    {} 内存占用减少 {} ", "▸".green(), "60%".green().bold());
-    println!("    {} 响应速度提升 {} ", "▸".green(), "40%".green().bold());
+    println!("  {}", "Capabilities:".truecolor(147, 112, 219).bold());
+    println!("    {} plan · act · reflect 自主循环", "▸".green());
+    println!("    {} 多 persona（coder / researcher / writer / analyst / operator）", "▸".green());
+    println!("    {} 可插拔工具集（coding / knowledge / desktop / web）", "▸".green());
+    println!("    {} 长期记忆 + 元认知决策", "▸".green());
     println!();
     println!("  {}", "Type 'help' for commands, 'exit' to quit".bright_black().italic());
 }
@@ -239,7 +240,8 @@ pub fn print_help() {
 
     println!();
     println!("  {}", "💡 Tip:".truecolor(255, 140, 66).bold());
-    println!("     Type any message to chat with Claude");
+    println!("     Type any message to chat with the agent, or run");
+    println!("     `agentrust task --goal \"...\"` for autonomous mode.");
     println!();
 }
 

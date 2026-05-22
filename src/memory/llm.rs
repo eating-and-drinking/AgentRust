@@ -152,12 +152,14 @@ impl AgentRustLlm {
                 content: Some(system.to_string()),
                 tool_calls: None,
                 tool_call_id: None,
+                images: Vec::new(),
             },
             crate::api::ChatMessage {
                 role: "user".to_string(),
                 content: Some(user.to_string()),
                 tool_calls: None,
                 tool_call_id: None,
+                images: Vec::new(),
             },
         ];
         let resp = self.client.chat(messages, None).await?;

@@ -1,6 +1,8 @@
 //! Tools Module - File operations, commands, search, etc.
 
+pub mod bundle;
 pub mod file_read;
+pub mod http_fetch;
 pub mod file_edit;
 pub mod file_write;
 pub mod execute_command;
@@ -32,6 +34,7 @@ pub use glob_tool::GlobTool;
 pub use file_memory::{FileMemoryStore, MemoryListTool, MemoryReadTool, MemoryWriteTool};
 pub use skill_md_tool::{MarkdownSkill, MarkdownSkillRegistry, SkillMdTool};
 pub use sub_agent::TaskTool;
+pub use http_fetch::{HttpFetchTool, WebSearchTool};
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -119,6 +122,10 @@ impl ToolRegistry {
         // TaskTool is registered unbound — call with_api_client() later to wire it.
         registry.register(Box::new(sub_agent::TaskTool::unbound()));
 
+        // Native web tools — give the `web` bundle real teeth.
+        registry.register(Box::new(http_fetch::HttpFetchTool::new()));
+        registry.register(Box::new(http_fetch::WebSearchTool::new()));
+
         // Memory tools share a single FileMemoryStore so list/read/write see
         // each other's writes. Wire up here using the default root.
         let mem_store = Arc::new(file_memory::FileMemoryStore::default());
@@ -159,6 +166,33 @@ impl ToolRegistry {
     /// Register a tool
     pub fn register(&mut self, tool: Box<dyn Tool>) {
         self.tools.insert(tool.name().to_string(), tool);
+    }
+
+    /// Prune the registry down to the tools exposed by the given
+    /// capability bundles. Tools not in any of the requested bundles
+    /// are dropped. Pass an empty slice to keep everything.
+    ///
+    /// Bundle slugs that don't exist are ignored. Tool names referenced
+    /// by a bundle but not actually registered are also ignored.
+    pub fn restrict_to_bundles(&mut self, bundles: &[impl AsRef<str>]) {
+        if bundles.is_empty() {
+            return;
+        }
+        let allowed = bundle::resolve(bundles);
+        if allowed.is_empty() {
+            return;
+        }
+        self.tools.retain(|name, _| allowed.contains(name));
+    }
+
+    /// Return the list of bundle slugs whose every tool is currently
+    /// registered. Useful for introspection / status output.
+    pub fn active_bundles(&self) -> Vec<&'static str> {
+        bundle::all()
+            .iter()
+            .filter(|b| b.tools.iter().all(|t| self.tools.contains_key(*t)))
+            .map(|b| b.name)
+            .collect()
     }
     
     /// Get a tool by name

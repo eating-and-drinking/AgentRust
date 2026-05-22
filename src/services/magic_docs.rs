@@ -203,6 +203,7 @@ Output only the updated document content, nothing else."#,
                 content: Some(prompt),
                 tool_calls: None,
                 tool_call_id: None,
+                images: Vec::new(),
             },
         ];
 

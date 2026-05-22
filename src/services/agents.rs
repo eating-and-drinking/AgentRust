@@ -289,12 +289,14 @@ Be thorough and systematic. Focus on finding and reporting issues."#.to_string()
                 content: Some(agent.system_prompt.clone()),
                 tool_calls: None,
                 tool_call_id: None,
+                images: Vec::new(),
             },
             crate::api::ChatMessage {
                 role: "user".to_string(),
                 content: Some(prompt.to_string()),
                 tool_calls: None,
                 tool_call_id: None,
+                images: Vec::new(),
             },
         ];
 

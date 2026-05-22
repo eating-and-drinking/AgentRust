@@ -1,20 +1,26 @@
-//! AgentRust Rust - High-performance CLI for Claude AI
+//! AgentRust — a general-purpose autonomous agent runtime in Rust.
 //!
-//! A complete Rust implementation of AgentRust, featuring:
-//! - Async-first architecture with Tokio
-//! - Native terminal UI with Ratatui
-//! - MCP protocol support
-//! - Voice input support
-//! - Memory management and team sync
-//! - Plugin system
-//! - SSH connection support
-//! - Remote execution
-//! - Project initialization
-//! - WebAssembly support for browser environments
-//! - Native GUI with egui/eframe
-//! - Plugin marketplace web interface
-//! - Multi-language i18n support
+//! AgentRust is **not** specific to coding. It is a domain-agnostic agent
+//! platform: a CLI / GUI / Web shell wrapped around a plan-execute-reflect
+//! loop, a swappable LLM client (OpenAI-compatible), a pluggable tool
+//! registry organised into capability bundles, long-term SQLite memory,
+//! and a metacognitive controller. Coding is one of several built-in
+//! personas — research, writing, analysis, and desktop operation are
+//! first-class siblings.
+//!
+//! Highlights:
+//! - Async-first runtime (Tokio)
+//! - Personas: Coder / Researcher / Writer / Analyst / Operator / General
+//! - Capability bundles: Coding / Knowledge / Desktop / Web / Communication
+//! - Autonomous `task` loop with plan/execute/reflect
+//! - Multimodal chat messages (text + image)
+//! - MCP protocol, plugins, skills, channels
+//! - SQLite-backed memory with BM25 + embedding hybrid recall
+//! - Metacognition: Bayesian self-belief, EFE meta-controller, CoT monitor
+//! - Native TUI (ratatui), desktop GUI (egui), Web (axum), WASM bindings
+//! - Fluent-based i18n
 
+pub mod agent;
 pub mod cli;
 pub mod tools;
 pub mod api;
@@ -43,6 +49,7 @@ pub mod web;
 #[cfg(feature = "i18n")]
 pub mod i18n;
 
+pub use agent::{AgentRunner, Goal, GoalStatus, Persona, PersonaProfile, RunOutcome, RunStep, StepKind, StopReason};
 pub use cli::Cli;
 pub use state::AppState;
 pub use tools::ToolRegistry;

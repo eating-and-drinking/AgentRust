@@ -11,12 +11,12 @@ pub use repl::Repl;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
-/// AgentRust - AI-powered coding assistant
+/// AgentRust — a general-purpose autonomous agent runtime in Rust.
 #[derive(Parser, Debug)]
 #[command(name = "agentrust")]
-#[command(author = "Anthropic")]
+#[command(author = "AgentRust Contributors")]
 #[command(version = "0.1.0")]
-#[command(about = "High-performance Rust implementation of AgentRust CLI")]
+#[command(about = "AgentRust — domain-agnostic autonomous agent runtime (Rust)")]
 #[command(disable_version_flag = true)]
 #[command(disable_help_subcommand = true)]
 pub struct CliArgs {
@@ -155,6 +155,32 @@ pub enum Commands {
         /// Number of iterations per request
         #[arg(short, long, default_value = "10")]
         iterations: usize,
+    },
+
+    /// Run an autonomous goal-directed task (plan / act / reflect loop)
+    Task {
+        /// The goal to pursue (free-form natural language)
+        #[arg(short, long)]
+        goal: String,
+        /// Persona to use: general, coder, researcher, writer, analyst,
+        /// operator, or any custom slug. Falls back to
+        /// `settings.default_persona` (default "general") when omitted.
+        #[arg(long)]
+        persona: Option<String>,
+        /// Override the capability bundles for this run
+        /// (comma-separated). When omitted the persona's suggested
+        /// bundles are used.
+        #[arg(long, value_delimiter = ',')]
+        bundles: Option<Vec<String>>,
+        /// Maximum tool-loop iterations before bail-out
+        #[arg(long, default_value = "12")]
+        max_steps: usize,
+        /// Optional success criteria — repeatable
+        #[arg(long = "criterion")]
+        criteria: Vec<String>,
+        /// Print the structured step trace as well as the final answer
+        #[arg(long)]
+        trace: bool,
     },
 }
 

@@ -153,6 +153,7 @@ impl SamplingManager {
                 content: Some(m.content.text.clone()),
                 tool_calls: None,
                 tool_call_id: None,
+                images: Vec::new(),
             })
             .collect();
 

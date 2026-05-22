@@ -2,7 +2,7 @@
 name = "agentrust"
 version = "0.1.0"
 edition = "2021"
-description = "High-performance Rust implementation of AgentRust CLI"
+description = "AgentRust — a general-purpose autonomous agent runtime in Rust"
 license = "MIT"
 repository = "https://github.com/agentrust/agentrust"
 
