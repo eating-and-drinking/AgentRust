@@ -67,31 +67,6 @@ agentrust task --goal "重写官网首页 hero section" --persona marketing
 | `web` | `http_fetch`（GET + 字节封顶） / `web_search`（DuckDuckGo HTML） / `file_read` / `file_write` |
 | `communication` | `ChannelPublish/Read/List` / `Task` |
 
-工具包是 Persona 的**建议**，可通过 `--bundles` 或 `settings.enabled_bundles` 覆盖。
-
----
-
-## 已实现 vs 占位
-
-| 模块 | 状态 | 说明 |
-| --- | --- | --- |
-| 通用 Agent 运行时 (`src/agent`) | ✅ 新增 | Goal / Persona / AgentRunner 完整可用；磁盘 Persona 加载；MetaCog 已挂入 |
-| 原生 Web 工具 (`src/tools/http_fetch.rs`) | ✅ 新增 | `http_fetch` + `web_search`（DuckDuckGo HTML 抓取） |
-| API 客户端 (`src/api`) | ✅ 完整 | OpenAI 兼容，支持流式/非流式 + **多模态消息** |
-| CLI / REPL (`src/cli`) | ✅ 完整 | 15 个子命令（新增 `task`），REPL 内置工具循环 + 元认知 |
-| 工具注册表 (`src/tools`) | ✅ 完整 | 18 个内置工具，按能力包可裁剪 |
-| MCP 协议 (`src/mcp`) | 🟡 部分 | JSON-RPC 2.0 server 完整；stdio 可用，TCP/WS 仅骨架 |
-| 记忆系统 (`src/memory`) | ✅ 完整 | SQLite + BM25 + 向量混合召回 + LLM 整合 |
-| 元认知 (`src/metacognition`) | ✅ 完整 | Beta 自信念、EFE 决策、CoT 循环检测，挂入 REPL |
-| 通道总线 (`src/channels`) | ✅ 完整 | 进程内 pub/sub，环形缓冲 |
-| 技能系统 (`src/skills`) | 🟡 框架 | 框架完整，内置 `commit` / `review` 仍是占位返回 |
-| 服务层 (`src/services`) | 🟡 混合 | `auto_dream` / `magic_docs` / `stress_tests` / `agents` 可用；`team_sync` / `plugin_marketplace` 部分；`voice` 占位 |
-| GUI (`src/gui`) | 🟡 可运行 | eframe/egui，聊天、设置、侧栏齐备 |
-| Web (`src/web`) | 🟡 可运行 | axum + tower，默认 `:8080` |
-| WASM (`src/wasm`) | 🟡 绑定 | JS 互操作桥 + localStorage 封装 |
-| 语音 (`src/voice`) | ❌ 未实现 | 仅打印 "not yet implemented" |
-| i18n (`src/i18n`) | 🟡 框架 | Fluent + rust-embed；枚举 10 种语言，目录目前只有 `en.ftl` / `zh.ftl` |
-
 ---
 
 ## 安装
@@ -340,39 +315,6 @@ cargo clippy --all-targets --all-features -- -D warnings
 ```
 
 ---
-
-## 路线图
-
-- 完成 MCP TCP / WebSocket transport
-- 实现真正的语音后端
-- 用户自定义 Bundle 通过配置注册（目前只能改源码常量）
-- 替换 `web_search` 的 DuckDuckGo HTML 抓取为可配置的搜索后端（Brave / Tavily / SerpAPI 等）
-- 让 `AgentRunner` 支持流式响应（目前 `chat`，未走 `chat_stream`）
-- GUI 端流式渲染 + 多模态附件上传 UI
-- 让 `locales/` 覆盖 `Language` 枚举里的全部 10 种语言
-
-### 已完成（保留作为可追溯的里程碑）
-
-- ✅ 去领域化：CLI / REPL / GUI / i18n 文案全部脱离 "AI coding assistant"
-- ✅ `agent` 模块：`Goal` / `Persona` / `AgentRunner` plan-act-reflect 循环
-- ✅ `task` 子命令 + persona / bundle / max-steps / criterion / trace
-- ✅ 工具能力 Bundle 化 + `ToolRegistry::restrict_to_bundles`
-- ✅ `ChatMessage` 多模态扩展（OpenAI vision parts 序列化）
-- ✅ Settings 增加 `default_persona` / `enabled_bundles`
-- ✅ 原生 `http_fetch` + `web_search` 工具
-- ✅ 磁盘 Persona 加载（`~/.agentrust/personas/<slug>.toml`）
-- ✅ `MetacognitionEngine` 接入 `AgentRunner`（与 REPL 行为对齐）
-- ✅ `tests/agent_test.rs` 覆盖 Goal/Persona/Bundle/Restriction/Multimodal
-
----
-
-## 贡献
-
-提交前请确认：
-
-1. `cargo fmt` 与 `cargo clippy --all-targets --all-features -- -D warnings` 干净；
-2. 新功能附带 `tests/` 下的集成测试；
-3. 涉及外部协议或核心抽象（`Goal` / `Persona` / `Bundle` / `AgentRunner`）变更的，更新本 README 中的"通用智能体的核心抽象"章节。
 
 ## 作者
 
