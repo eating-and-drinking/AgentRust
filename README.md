@@ -97,8 +97,8 @@ agentrust task --goal "重写官网首页 hero section" --persona marketing
 ## 安装
 
 ```bash
-git clone https://github.com/agentrust/agentrust.git
-cd agentrust
+git clone https://github.com/eating-and-drinking/AgentRust.git
+cd AgentRust
 cargo build --release
 ```
 
@@ -373,6 +373,12 @@ cargo clippy --all-targets --all-features -- -D warnings
 1. `cargo fmt` 与 `cargo clippy --all-targets --all-features -- -D warnings` 干净；
 2. 新功能附带 `tests/` 下的集成测试；
 3. 涉及外部协议或核心抽象（`Goal` / `Persona` / `Bundle` / `AgentRunner`）变更的，更新本 README 中的"通用智能体的核心抽象"章节。
+
+## 作者
+
+由 [eating-and-drinking](https://github.com/eating-and-drinking) 创建并维护。
+
+仓库地址：[https://github.com/eating-and-drinking/AgentRust](https://github.com/eating-and-drinking/AgentRust)
 
 ## 许可证
 

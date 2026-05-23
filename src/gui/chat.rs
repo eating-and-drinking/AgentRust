@@ -795,7 +795,7 @@ impl ChatPanel {
     pub fn clear_messages(&mut self) {
         self.messages.clear();
         self.messages.push(
-            ChatMessage::assistant("Hello! I'm Claude. How can I help you today?")
+            ChatMessage::assistant("Hello! How can I help you today?")
         );
     }
 

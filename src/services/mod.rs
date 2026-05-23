@@ -108,7 +108,7 @@ impl ServiceManager {
 
         if let Some(agents) = &self.agents {
             let status = agents.get_status().await;
-            println!("   🤖 Agents: {} available, {} active", 
+            println!("   Agents: {} available, {} active",
                      status.available_agents.len(), status.active_sessions);
         }
         

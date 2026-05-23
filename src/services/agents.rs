@@ -258,7 +258,7 @@ Be thorough and systematic. Focus on finding and reporting issues."#.to_string()
             sessions.insert(session_id.clone(), session.clone());
         }
 
-        println!("🤖 Running agent: {} ({})", agent.name, session_id);
+        println!("Running agent: {} ({})", agent.name, session_id);
 
         let result = self.execute_agent(&agent, prompt).await?;
 

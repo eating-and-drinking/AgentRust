@@ -464,7 +464,7 @@ impl Cli {
             }
         };
 
-        println!("🤖 Running {} agent...", agent_type);
+        println!("Running {} agent...", agent_type);
         println!("Prompt: {}", prompt);
         println!();
 
