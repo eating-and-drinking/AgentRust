@@ -1,8 +1,8 @@
 # AgentRust
 
-> 一个用 Rust 实现的、面向 OpenAI 兼容大模型的**通用自主智能体运行时**。
+> 一个用 Rust 实现的**通用自主智能体运行时**。
 
-AgentRust 不是编程助手。它是一个领域中立的 Agent 平台：在一个可替换的 LLM 客户端、一套可裁剪的工具集、SQLite 长期记忆、元认知控制器之上，跑一个 `plan → act → reflect` 循环。编程只是几种内置 persona 之一——研究、写作、数据分析、桌面自动化是平级公民。
+AgentRust 目标是做一个通用的智能体，但实际上只是[eating-and-drinking](https://github.com/eating-and-drinking) 在吃吃喝喝之余做的一个 toy 项目，如果你发现有用，记得给我star，这是我的小号，一个star都没有，呜呜呜。
 
 一个 Rust 工作区，三种入口：CLI 主程序 `agentrust`、egui 桌面端 `agentrust-gui`、axum Web 服务 `agentrust-web`，并可选编译为 WebAssembly。
 
